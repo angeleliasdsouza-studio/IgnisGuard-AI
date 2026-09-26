@@ -1,0 +1,78 @@
+{
+  "model_name": "Decision Tree Classifier",
+  "model_loaded": true,
+  "algorithm": "Decision Tree (CART)",
+  "criterion": "gini",
+  "max_depth": 8,
+  "features": [
+    "gas_level",
+    "temperature",
+    "humidity",
+    "flame_status",
+    "gas_change",
+    "temperature_change"
+  ],
+  "classes": [
+    "Normal",
+    "Gas Warning",
+    "Fire Risk",
+    "Critical"
+  ],
+  "training_split": 0.8,
+  "testing_split": 0.2,
+  "dataset_size": 2000,
+  "train_size": 1600,
+  "test_size": 400,
+  "accuracy": 97.0,
+  "precision": 96.99,
+  "recall": 97.0,
+  "f1_score": 96.98,
+  "confusion_matrix": [
+    [
+      57,
+      3,
+      0,
+      0
+    ],
+    [
+      3,
+      73,
+      4,
+      0
+    ],
+    [
+      0,
+      0,
+      98,
+      2
+    ],
+    [
+      0,
+      0,
+      0,
+      160
+    ]
+  ],
+  "per_class": {
+    "Normal": {
+      "precision": 95.0,
+      "recall": 95.0,
+      "f1": 95.0
+    },
+    "Gas Warning": {
+      "precision": 96.05,
+      "recall": 91.25,
+      "f1": 93.59
+    },
+    "Fire Risk": {
+      "precision": 96.08,
+      "recall": 98.0,
+      "f1": 97.03
+    },
+    "Critical": {
+      "precision": 98.77,
+      "recall": 100.0,
+      "f1": 99.38
+    }
+  }
+}
