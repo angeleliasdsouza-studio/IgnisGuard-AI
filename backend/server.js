@@ -2,10 +2,12 @@
  * AI Fire & Gas Monitor - Backend Server
  * Uses a simple local JSON array to avoid SQLite native compilation issues on Windows.
  */
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const supabase = require('./supabase');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -130,10 +132,29 @@ app.post('/api/sensor-data', (req, res) => {
   }
   lastRealDataTime = Date.now();
 
+  const finalTimestamp = timestamp || new Date().toISOString();
+
   saveReading({
-    id: currentId++, timestamp: timestamp || new Date().toISOString(),
+    id: currentId++, timestamp: finalTimestamp,
     gas_level, temperature, humidity, flame_status, ai_status, risk_score
   });
+
+  // Asynchronously insert into Supabase
+  if (supabase) {
+    supabase.from('sensor_readings').insert([{
+      gas_level,
+      temperature,
+      humidity,
+      flame_status,
+      hazard_state: ai_status,
+      risk_score
+    }]).then(({ error }) => {
+      if (error) console.error('Supabase insertion error:', error);
+    }).catch(err => {
+      console.error('Supabase insertion catch error:', err);
+    });
+  }
+
   res.json({ success: true, ai_status, risk_score });
 });
 
@@ -141,7 +162,22 @@ app.get('/api/latest', (req, res) => {
   res.json(sensor_readings.length ? sensor_readings[sensor_readings.length - 1] : null);
 });
 
-app.get('/api/history', (req, res) => {
+app.get(['/api/history', '/api/historical'], async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('sensor_readings')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      return res.json(data);
+    } catch (err) {
+      console.error('Supabase fetch error, falling back to in-memory store:', err);
+    }
+  }
+
   const { hours = 1, limit = 200 } = req.query;
   const since = new Date(Date.now() - parseFloat(hours) * 3600000).toISOString();
   const rows = sensor_readings.filter(r => r.timestamp >= since).slice(-limit).reverse();
